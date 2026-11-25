@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import os
+import io
 from resume_parser import extract_text, extract_candidate_name
 from job_analyzer import extract_skills
 from matching import calculate_match
@@ -27,8 +29,27 @@ with tab1:
 
     st.subheader("2. Upload candidate resumes")
     uploaded_files = st.file_uploader("Upload PDF or DOCX resumes", type=["pdf", "docx"], accept_multiple_files=True)
+    demo_mode = st.button("🚀 Run Demo with 10 Sample Resumes")
 
-    if st.button("Analyze and rank candidates", type="primary"):
+    if demo_mode:
+        sample_folder = os.path.join(os.path.dirname(__file__), "sample_resumes")
+        uploaded_files = []
+
+        if os.path.exists(sample_folder):
+            for filename in sorted(os.listdir(sample_folder)):
+                if filename.startswith("Candidate") and filename.lower().endswith((".pdf", ".docx")):
+                    file_path = os.path.join(sample_folder, filename)
+
+                    with open(file_path, "rb") as file:
+                        sample_file = io.BytesIO(file.read())
+                        sample_file.name = filename
+                        uploaded_files.append(sample_file)
+
+            st.success(f"{len(uploaded_files)} demo resumes loaded successfully!")
+        else:
+            st.error("Sample resumes folder not found.")
+
+    if st.button("Analyze and rank candidates", type="primary") or demo_mode:
         if not job_description.strip():
             st.error("Please enter a job description.")
         elif not uploaded_files:
